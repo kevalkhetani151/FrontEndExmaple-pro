@@ -1,46 +1,39 @@
 "use client";
+
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import { ROLES } from "@src/utils/helper";
-import CustomInput from "../customeFormField";
+import { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { useUserLogin } from "@src/hooks/apiHooks";
-import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
+import toast from "react-hot-toast";
+
+import { ROLES } from "@src/utils/helper";
+import CustomInput from "../customeFormField";
+import { useUserLogin } from "@src/hooks/apiHooks";
 import { setAuthToken } from "@src/redux/reducers/authSlice";
 
 const LoginComponent = () => {
-  const method = useForm();
-  const { handleSubmit, reset } = method;
-  const dispetch = useDispatch();
+  const methods = useForm();
+  const { handleSubmit, reset } = methods;
+  const dispatch = useDispatch();
   const router = useRouter();
-
-  const {
-    isError: isLoginError,
-    isLoading: isLoginLoading,
-    data: loginData,
-    error: loginError,
-    mutate: login,
-  } = useUserLogin();
+  const { isError, isLoading, data, error, mutate } = useUserLogin();
 
   useEffect(() => {
-    if (loginData && !isLoginLoading) {
-      dispetch(setAuthToken(loginData.data.token));
-      toast.success(loginData?.message ?? "Login Successful");
+    if (data && !isLoading) {
+      dispatch(setAuthToken(data.data.token));
+      toast.success(data?.message ?? "Login Successful");
       reset();
-      router?.push("/traking");
-    }
-    if (isLoginError) {
-      toast.error(loginError);
       router.push("/traking");
     }
-  }, [loginData, isLoginLoading, loginError, isLoginError, reset, router]);
+    if (isError) {
+      toast.error(error.message);
+      router.push("/login");
+    }
+  }, [data, isLoading, error, isError, reset, router, dispatch]);
 
-  const onSubmit = (data: { email: string; password: string }) => {
-    console.log("data is here");
-    console.log(data);
-    login(data);
+  const onSubmit = (formData: { email: string; password: string }) => {
+    mutate(formData);
     reset();
   };
 
@@ -52,15 +45,11 @@ const LoginComponent = () => {
             Seamless Login for Exclusive Access
           </h2>
           <p className="text-sm mt-6 text-slate-500 leading-relaxed">
-            Immerse yourself in a hassle-free login journey with our intuitively
-            designed login form. Effortlessly access your account.
+            Immerse yourself in a hassle-free login journey with our intuitively designed login form. Effortlessly access your account.
           </p>
           <p className="text-sm mt-12 text-slate-500">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="text-blue-600 font-medium hover:underline ml-1"
-            >
+            Don&apos;t have an account?
+            <Link href="/signup" className="text-blue-600 font-medium hover:underline ml-1">
               Register here
             </Link>
           </p>
@@ -68,31 +57,21 @@ const LoginComponent = () => {
 
         <div className="w-full">
           <h1 className="text-2xl mb-12 text-center">Login here</h1>
-          <FormProvider {...method}>
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="max-w-md w-full md:ml-auto"
-            >
-              <div className="space-y-6">
-                <div>
-                  <CustomInput
-                    name="email"
-                    type="email"
-                    label="Enter Your Email"
-                    placeholder="Enter Email"
-                  />
-                </div>
-                <div>
-                  <CustomInput
-                    name="password"
-                    type="password"
-                    label="Enter Your Password"
-                    placeholder="Enter Password"
-                  />
-                </div>
-              </div>
-
-              <div className="!mt-12">
+          <FormProvider {...methods}>
+            <form onSubmit={handleSubmit(onSubmit)} className="max-w-md w-full md:ml-auto space-y-6">
+              <CustomInput
+                name="email"
+                type="email"
+                label="Enter Your Email"
+                placeholder="Enter Email"
+              />
+              <CustomInput
+                name="password"
+                type="password"
+                label="Enter Your Password"
+                placeholder="Enter Password"
+              />
+              <div className="mt-12">
                 <button
                   type="submit"
                   className="w-full shadow-xl py-2.5 px-4 text-sm font-semibold rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
